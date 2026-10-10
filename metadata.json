@@ -1,0 +1,8 @@
+{
+  "name": "MERAJ CAFE POINT",
+  "description": "MERAJ CAFE POINT - Cyber Cafe, Online Services, Image & PDF Tools, Printing and Digital Solutions in Bihar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

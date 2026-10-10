@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>MERAJ CAFE POINT | Cyber Cafe, Online Tools & Digital Services</title>
+    <meta name="description" content="MERAJ CAFE POINT - Cyber Cafe & Online Service Center in Bihar. Passport photo maker, PDF tools, image compressor, government application assistance & printing services." />
+    <meta property="og:title" content="MERAJ CAFE POINT | Cyber Cafe, Online Tools & Digital Services" />
+    <meta property="og:description" content="MERAJ CAFE POINT - Cyber Cafe & Online Service Center in Bihar. In-browser image/PDF tools, government job directory, and digital services." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    <!-- Original Favicon for MERAJ CAFE POINT (Computer / Digital Service Icon) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23F97316'/%3E%3Cpath d='M7 8h18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zm0 2v7h18v-7H7zm6 13h6v2h-6v-2zm-3 2h12v1H10v-1z' fill='%23111827'/%3E%3Ccircle cx='16' cy='14' r='2' fill='%23FFF'/%3E%3C/svg%3E" />
+    
+    <!-- Google Fonts: Poppins (Headings), Inter (English Body), Noto Sans Devanagari (Hindi) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('meraj_theme');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = saved === 'dark' || (!saved && prefersDark);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch(e) {}
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-[#F1F5F9] dark:bg-[#0B0F19] text-[#1E293B] dark:text-[#F8FAFC] antialiased selection:bg-orange-500 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

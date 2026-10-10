@@ -1,0 +1,254 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Inter', 'Noto Sans Devanagari', sans-serif;
+    --font-devanagari: 'Noto Sans Devanagari', sans-serif;
+
+    /* Light Mode Palette matching the uploaded screenshot */
+    --neu-bg: #F1F5F9;
+    --neu-surface: #FFFFFF;
+    --neu-light-shadow: #FFFFFF;
+    --neu-dark-shadow: #E2E8F0;
+    --neu-border: #E2E8F0;
+  }
+
+  :root.dark, [data-theme="dark"], .dark {
+    /* Dark Mode Palette */
+    --neu-bg: #0B0F19;
+    --neu-surface: #151D2E;
+    --neu-light-shadow: #1E293B;
+    --neu-dark-shadow: #05070D;
+    --neu-border: rgba(255, 255, 255, 0.08);
+  }
+
+  body {
+    font-family: var(--font-body);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: var(--neu-bg);
+    color: #1E293B;
+  }
+
+  .dark body {
+    background-color: var(--neu-bg);
+    color: #F8FAFC;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
+  /* Explicit font on inputs and buttons */
+  input, textarea, select, button {
+    font-family: var(--font-body) !important;
+  }
+}
+
+/* ========================================================
+   MODERN UI / SOFT ELEVATED DESIGN SYSTEM (MATCHING SCREENSHOT)
+   ======================================================== */
+
+/* 1. Elevated Clean White / Dark Cards */
+.neu-card, .ui-card {
+  background-color: var(--neu-surface);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--neu-border);
+  border-radius: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-card-sm, .ui-card-sm {
+  background-color: var(--neu-surface);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--neu-border);
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. Interactive Elevated Cards with Hover Lift */
+.neu-card-hover, .ui-card-hover {
+  background-color: var(--neu-surface);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--neu-border);
+  border-radius: 1.25rem;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-card-hover:hover, .ui-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-color: rgba(249, 115, 22, 0.35);
+}
+
+/* 3. Recessed / Inset Input Surfaces */
+.neu-inset {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+
+.dark .neu-inset {
+  background-color: #121927;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.neu-inset-sm {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.75rem;
+}
+
+.dark .neu-inset-sm {
+  background-color: #151D2E;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.neu-input {
+  background-color: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.dark .neu-input {
+  background-color: #121927;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+}
+
+.neu-input:focus {
+  border-color: #F97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+/* 4. Raised Tactile Buttons */
+.neu-btn {
+  background-color: var(--neu-surface);
+  border: 1px solid var(--neu-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 0.875rem;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.neu-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.neu-btn:active, .neu-btn-active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* 5. Primary Orange Embossed Pill & Button (Exact like the screenshot) */
+.neu-btn-orange, .ui-btn-orange {
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  border: none;
+  border-radius: 9999px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.neu-btn-orange:hover, .ui-btn-orange:hover {
+  background: linear-gradient(135deg, #FB923C 0%, #EA580C 100%);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.45);
+  transform: translateY(-1px);
+}
+
+.neu-btn-orange:active, .ui-btn-orange:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);
+}
+
+/* 6. Emerald Green Button (WhatsApp) */
+.neu-btn-emerald {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+  border: none;
+  border-radius: 9999px;
+  font-weight: 700;
+  transition: all 0.18s ease;
+}
+
+.neu-btn-emerald:hover {
+  background: linear-gradient(135deg, #34D399 0%, #059669 100%);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.45);
+  transform: translateY(-1px);
+}
+
+/* 7. Icon Squircle */
+.neu-icon {
+  background-color: var(--neu-surface);
+  border: 1px solid var(--neu-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* 8. Active Tab Pill */
+.neu-tab-active {
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3) !important;
+  font-weight: 700;
+}
+
+.neu-tab-idle {
+  background: transparent;
+  color: #64748B;
+  transition: all 0.2s ease;
+}
+
+.neu-tab-idle:hover {
+  color: #1E293B;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.dark .neu-tab-idle:hover {
+  color: #F8FAFC;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neu-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
