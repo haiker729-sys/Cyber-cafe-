@@ -11,6 +11,7 @@ import { Contact } from './components/Contact.tsx';
 import { CustomerPortal } from './components/CustomerPortal.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { LegalPages } from './components/LegalPages.tsx';
+import { Pricing } from './components/Pricing.tsx';
 
 import { SeoHelmet } from './components/SeoHelmet.tsx';
 
@@ -23,6 +24,7 @@ const MainContent: React.FC = () => {
       {activeTab === 'tools' && <AllTools />}
       {activeTab === 'services' && <Services />}
       {activeTab === 'govt' && <GovtJobs />}
+      {activeTab === 'pricing' && <Pricing />}
       {activeTab === 'contact' && <Contact />}
       {activeTab === 'status' && <CustomerPortal />}
       {activeTab === 'admin' && <AdminPortal />}
@@ -37,7 +39,7 @@ export default function App() {
   return (
     <AppProvider>
       <SeoHelmet />
-      <div className="min-h-screen flex flex-col bg-[#F1F5F9] dark:bg-[#0B0F19] text-[#1E293B] dark:text-[#F8FAFC] transition-colors selection:bg-orange-500 selection:text-white">
+      <div className="min-h-screen flex flex-col bg-[#EAF0F7] dark:bg-[#10151E] text-[#1E293B] dark:text-[#F8FAFC] transition-colors selection:bg-orange-500 selection:text-white">
         <Header />
         <MainContent />
         <Footer />

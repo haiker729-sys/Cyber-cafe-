@@ -11,7 +11,9 @@ import {
   Layers,
   Briefcase,
   PhoneCall,
-  Sparkles
+  Sparkles,
+  Search,
+  Bell
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -29,11 +31,12 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { id: 'home', labelEn: 'Home', labelHi: 'होम', icon: <HomeIcon className="w-4 h-4" /> },
-    { id: 'tools', labelEn: 'All Tools', labelHi: 'सभी टूल्स', icon: <Layers className="w-4 h-4" /> },
-    { id: 'services', labelEn: 'Cyber Cafe', labelHi: 'साइबर कैफे', icon: <Sparkles className="w-4 h-4" /> },
-    { id: 'govt', labelEn: 'Govt & Jobs', labelHi: 'सरकारी नौकरी', icon: <Briefcase className="w-4 h-4" /> },
-    { id: 'contact', labelEn: 'Contact', labelHi: 'संपर्क', icon: <PhoneCall className="w-4 h-4" /> },
+    { id: 'home', labelEn: 'Home', labelHi: 'Home', icon: <HomeIcon className="w-4 h-4" /> },
+    { id: 'tools', labelEn: 'All Tools', labelHi: 'All Tools', icon: <Layers className="w-4 h-4" /> },
+    { id: 'services', labelEn: 'Cyber Cafe', labelHi: 'Cyber Cafe', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'govt', labelEn: 'Govt & Jobs', labelHi: 'Govt & Jobs', icon: <Briefcase className="w-4 h-4" /> },
+    { id: 'pricing', labelEn: 'Pricing', labelHi: 'Pricing', icon: <FileCheck className="w-4 h-4" /> },
+    { id: 'contact', labelEn: 'Contact', labelHi: 'Contact', icon: <PhoneCall className="w-4 h-4" /> },
   ];
 
   const handleNav = (tabId: string) => {
@@ -44,8 +47,8 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#F1F5F9]/95 dark:bg-[#0B0F19]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 bg-[#EAF0F7]/95 dark:bg-[#10151E]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
         
         {/* 1. BRAND LOGO (Exact stylized orange 'M' ribbon from screenshot) */}
         <button
@@ -99,30 +102,41 @@ export const Header: React.FC = () => {
           </div>
         </button>
 
-        {/* 2. NAVIGATION PILLS (Exact design with active Orange Pill) */}
-        <nav className="hidden lg:flex items-center gap-1.5 px-2 py-1.5 rounded-full bg-slate-200/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
+        {/* 2. NAVIGATION BAR (Exact design matching screenshot) */}
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => handleNav(item.id)}
-                className={`transition-all whitespace-nowrap px-4 py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer ${
+                className={`transition-all whitespace-nowrap text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/30'
-                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
+                    ? 'px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25'
+                    : 'px-3 py-2 rounded-full text-slate-700 dark:text-slate-200 hover:text-orange-500 hover:bg-white/80 dark:hover:bg-slate-800'
                 }`}
               >
                 {item.id === 'home' && <HomeIcon className="w-4 h-4 shrink-0" />}
-                <span>{language === 'hi' ? item.labelHi : item.labelEn}</span>
+                <span>{item.labelEn}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* 3. RIGHT CONTROLS: Language Pill, Sun/Moon Switch, Mobile Menu */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+        {/* 3. RIGHT CONTROLS: Search Icon, Language Pill, Sun/Moon Switch, Bell Icon, Mobile Menu */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           
+          {/* Search Icon Circle Button */}
+          <button
+            type="button"
+            onClick={() => handleNav('tools')}
+            className="w-9 h-9 rounded-full bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/70 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-orange-500 hover:border-orange-400 shadow-sm transition-all cursor-pointer"
+            title="Search Tools / टूल्स खोजें"
+            aria-label="Search Tools"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
           {/* Language Toggle Pill: हिंदी | EN */}
           <button
             type="button"
@@ -180,36 +194,23 @@ export const Header: React.FC = () => {
             </div>
           </button>
 
-          {/* Track Application Quick Button (Desktop) */}
+          {/* Notification Bell Button with Orange Indicator Dot */}
           <button
             type="button"
-            onClick={() => handleNav('status')}
-            className="hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-orange-500 shadow-sm cursor-pointer transition-all"
+            onClick={() => handleNav('services')}
+            className="relative w-9 h-9 rounded-full bg-slate-200/60 dark:bg-slate-800/80 border border-slate-300/70 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-orange-500 hover:border-orange-400 shadow-sm transition-all cursor-pointer"
+            title="Notifications & Updates / सूचनाएं"
+            aria-label="Notifications"
           >
-            <FileCheck className="w-4 h-4 text-orange-500" />
-            <span>{language === 'hi' ? 'आवेदन स्थिति' : 'Track Status'}</span>
-          </button>
-
-          {/* Admin / Portal Trigger */}
-          <button
-            type="button"
-            onClick={() => handleNav('admin')}
-            className={`p-2.5 rounded-xl border transition-all flex items-center justify-center cursor-pointer ${
-              userRole !== 'guest' || activeTab === 'admin'
-                ? 'border-orange-500 bg-orange-500 text-white shadow-md shadow-orange-500/25'
-                : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-orange-500 shadow-sm'
-            }`}
-            title="Admin & Staff Portal"
-            aria-label="Admin Portal"
-          >
-            <ShieldAlert className="w-4 h-4" />
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
           </button>
 
           {/* Mobile Menu Hamburger (Rounded Square Icon) */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm flex items-center justify-center cursor-pointer"
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm flex items-center justify-center cursor-pointer"
             aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5 text-orange-500" /> : <Menu className="w-5 h-5" />}

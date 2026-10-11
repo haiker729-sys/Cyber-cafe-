@@ -9,19 +9,19 @@
     --font-devanagari: 'Noto Sans Devanagari', sans-serif;
 
     /* Light Mode Palette matching the uploaded screenshot */
-    --neu-bg: #F1F5F9;
+    --neu-bg: #EAF0F7;
     --neu-surface: #FFFFFF;
     --neu-light-shadow: #FFFFFF;
-    --neu-dark-shadow: #E2E8F0;
+    --neu-dark-shadow: #D2DCE8;
     --neu-border: #E2E8F0;
   }
 
   :root.dark, [data-theme="dark"], .dark {
     /* Dark Mode Palette */
-    --neu-bg: #0B0F19;
+    --neu-bg: #10151E;
     --neu-surface: #151D2E;
     --neu-light-shadow: #1E293B;
-    --neu-dark-shadow: #05070D;
+    --neu-dark-shadow: #080C14;
     --neu-border: rgba(255, 255, 255, 0.08);
   }
 

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext.tsx';
-import { TOOLS_LIST } from '../data/mockData.ts';
-import { ToolItem } from '../types.ts';
+import { TOOL_REGISTRY, CATEGORY_META, RegistryTool } from '../data/toolRegistry.ts';
 import { ImageCompressorTool } from './tools/ImageCompressorTool.tsx';
 import { PassportPhotoTool } from './tools/PassportPhotoTool.tsx';
 import { SignatureTool } from './tools/SignatureTool.tsx';
@@ -20,7 +19,6 @@ import {
   Sparkles, 
   ArrowLeft, 
   CheckCircle2, 
-  Clock, 
   Layers, 
   FileText, 
   Camera, 
@@ -28,475 +26,433 @@ import {
   QrCode, 
   Calculator, 
   Printer,
-  HelpCircle,
-  BookOpen,
   X,
-  ArrowRight
+  Star,
+  ChevronRight,
+  Maximize2,
+  RefreshCw,
+  Zap,
+  Grid,
+  Scissors,
+  Check,
+  Building2,
+  Crown
 } from 'lucide-react';
 
-interface ToolGuideInfo {
-  stepsEn: Array<{ step: number; title: string; desc: string }>;
-  stepsHi: Array<{ step: number; title: string; desc: string }>;
-}
-
-const TOOL_GUIDES_DATA: Record<string, ToolGuideInfo> = {
-  compressor: {
-    stepsEn: [
-      { step: 1, title: 'Select Image', desc: 'Upload your photo (JPG, PNG, WebP) from phone or PC.' },
-      { step: 2, title: 'Set Target KB', desc: 'Choose 20KB, 50KB (SSC/BPSC standard), or type custom size.' },
-      { step: 3, title: 'Download Instantly', desc: 'Binary search optimizes file size without loss of readability.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'फोटो अपलोड करें', desc: 'फोन या कंप्यूटर से अपनी फोटो (JPG, PNG, WebP) चुनें।' },
-      { step: 2, title: 'टारगेट KB चुनें', desc: '20KB, 50KB (SSC/BPSC मानक) या अपनी पसंद का साइज लिखें।' },
-      { step: 3, title: 'तुरंत डाउनलोड करें', desc: 'बिना धुंधला किए फाइल कम्प्रेस हो जाएगी; तुरंत डाउनलोड करें।' }
-    ]
-  },
-  passport: {
-    stepsEn: [
-      { step: 1, title: 'Upload Portrait', desc: 'Choose a clear front-facing portrait or selfie.' },
-      { step: 2, title: 'Crop 35x45mm', desc: 'Align within frame; select 300 DPI and optional white/blue background.' },
-      { step: 3, title: 'Save Single or Sheet', desc: 'Download single photo or ready-to-print 4x6 / A4 cut-mark sheet.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'फोटो चुनें', desc: 'अपनी साफ चेहरे वाली पासपोर्ट साइज या सेल्फी फोटो चुनें।' },
-      { step: 2, title: '35×45mm क्रॉप करें', desc: 'फ्रेम में सेट करें, 300 DPI और सफेद/हल्का नीला बैकग्राउंड चुनें।' },
-      { step: 3, title: 'शीट डाउनलोड करें', desc: 'सिंगल फोटो या कट-मार्क वाली 4×6 / A4 प्रिंटेबल शीट प्राप्त करें।' }
-    ]
-  },
-  signature: {
-    stepsEn: [
-      { step: 1, title: 'Upload Signature', desc: 'Photo of your signature written on plain white paper.' },
-      { step: 2, title: 'Clean & Frame', desc: 'Select 140x60px; filter whitens paper background and darkens ink.' },
-      { step: 3, title: 'Export Compliant File', desc: 'Compressed automatically under 10-20KB ready for portals.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'हस्ताक्षर अपलोड करें', desc: 'सफेद सादे कागज पर किए गए सिग्नेचर की फोटो चुनें।' },
-      { step: 2, title: 'साइज व बैकग्राउंड साफ करें', desc: '140×60px प्रीसेट चुनें; बैकग्राउंड शुद्ध सफेद और स्याही गहरी होगी।' },
-      { step: 3, title: '10-20KB में डाउनलोड करें', desc: 'सरकारी परीक्षा पोर्टल में अपलोड करने के लिए तुरंत डाउनलोड करें।' }
-    ]
-  },
-  resizer: {
-    stepsEn: [
-      { step: 1, title: 'Upload Image', desc: 'Select the image file to resize or convert.' },
-      { step: 2, title: 'Set Width/Height & Format', desc: 'Type custom pixel dimensions and choose JPG, PNG, or WebP.' },
-      { step: 3, title: 'Inject DPI & Download', desc: 'Embed 300 DPI metadata and save with exact dimensions.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'इमेज अपलोड करें', desc: 'रीसाइज करने या फॉर्मेट बदलने के लिए फोटो चुनें।' },
-      { step: 2, title: 'चौड़ाई, ऊंचाई व फॉर्मेट तय करें', desc: 'पिक्सल में साइज लिखें और JPG, PNG या WebP चुनें।' },
-      { step: 3, title: 'DPI सेट व डाउनलोड', desc: '300 DPI जोड़कर सटीक साइज में फाइल डाउनलोड करें।' }
-    ]
-  },
-  'pdf-merge': {
-    stepsEn: [
-      { step: 1, title: 'Add PDF Files', desc: 'Upload 2 or more PDF certificates, marksheets, or cards.' },
-      { step: 2, title: 'Order Documents', desc: 'Use ↑ / ↓ arrow buttons to set the desired sequence of files.' },
-      { step: 3, title: 'Merge & Download', desc: 'Combine all pages into one single PDF in your browser securely.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'PDF फाइलें जोड़ें', desc: 'मर्ज करने के लिए 2 या अधिक PDF दस्तावेज चुनें।' },
-      { step: 2, title: 'क्रम व्यवस्थित करें', desc: 'ऊपर/नीचे तीरों (↑ / ↓) से जिस पेज को आगे रखना है सेट करें।' },
-      { step: 3, title: 'मर्ज व डाउनलोड', desc: 'ब्राउज़र में 100% सुरक्षित रूप से एक PDF फाइल डाउनलोड करें।' }
-    ]
-  },
-  'pdf-split': {
-    stepsEn: [
-      { step: 1, title: 'Upload PDF', desc: 'Select any multi-page PDF document you want to extract from.' },
-      { step: 2, title: 'Select Pages', desc: 'Click page thumbnails or type a range like 1-2, 4 in the box.' },
-      { step: 3, title: 'Download Pages', desc: 'Save selected pages as a combined PDF or separate ZIP archive.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'PDF अपलोड करें', desc: 'जिस PDF से पेज अलग निकालने हैं उसे चुनें।' },
-      { step: 2, title: 'पेज चुनें या रेंज लिखें', desc: 'पेज पर क्लिक करें या 1-2, 4 जैसी रेंज दर्ज करें।' },
-      { step: 3, title: 'अलग PDF डाउनलोड करें', desc: 'चुने गए पेजों की सिंगल PDF या अलग-अलग ZIP फाइल प्राप्त करें।' }
-    ]
-  },
-  'img-to-pdf': {
-    stepsEn: [
-      { step: 1, title: 'Upload Photos', desc: 'Select document photos or certificate scans.' },
-      { step: 2, title: 'Arrange Order', desc: 'Sort page order and orientation.' },
-      { step: 3, title: 'Export PDF', desc: 'Download as single clean multi-page document PDF.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'फोटो अपलोड करें', desc: 'दस्तावेजों या प्रमाण पत्रों की फोटो चुनें।' },
-      { step: 2, title: 'क्रम तय करें', desc: 'पेज का सही क्रम और ओरिएंटेशन व्यवस्थित करें।' },
-      { step: 3, title: 'PDF डाउनलोड करें', desc: 'तैयार A4 मल्टी-पेज PDF तुरंत डाउनलोड करें।' }
-    ]
-  },
-  ocr: {
-    stepsEn: [
-      { step: 1, title: 'Upload Document Scan', desc: 'Select a scanned photo or printed document.' },
-      { step: 2, title: 'Select Language', desc: 'Choose Hindi, English, or Hindi + English combined.' },
-      { step: 3, title: 'Copy Text', desc: 'Extract editable text; copy to clipboard or save as TXT.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'दस्तावेज़ फोटो चुनें', desc: 'किसी भी छपे हुए कागज या सर्टिफिकेट की फोटो अपलोड करें।' },
-      { step: 2, title: 'भाषा चुनें', desc: 'हिंदी, अंग्रेजी या दोनों भाषाएं सेलेक्ट करें।' },
-      { step: 3, title: 'टेक्स्ट कॉपी करें', desc: 'निकाले गए टेक्स्ट को सीधे कॉपी करें या TXT में सेव करें।' }
-    ]
-  },
-  'qr-generator': {
-    stepsEn: [
-      { step: 1, title: 'Choose QR Type', desc: 'Select WhatsApp link, UPI payment, URL, or Text.' },
-      { step: 2, title: 'Enter Info', desc: 'Type phone number (auto +91 prefix) or UPI VPA.' },
-      { step: 3, title: 'Download QR', desc: 'Save high-resolution PNG or SVG code instantly.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'QR प्रकार चुनें', desc: 'व्हाट्सएप चैट लिंक, UPI पेमेंट या यूआरएल चुनें।' },
-      { step: 2, title: 'जानकारी दर्ज करें', desc: 'मोबाइल नंबर (+91 ऑटो) या UPI ID दर्ज करें।' },
-      { step: 3, title: 'QR कोड डाउनलोड', desc: 'HD क्वालिटी में PNG या SVG तुरंत डाउनलोड करें।' }
-    ]
-  },
-  'barcode-generator': {
-    stepsEn: [
-      { step: 1, title: 'Enter Value', desc: 'Type product ID, registration number, or code.' },
-      { step: 2, title: 'Pick Format', desc: 'Choose CODE128, EAN-13, or CODE39 standard.' },
-      { step: 3, title: 'Save Barcode', desc: 'Download barcode image ready for labels and print.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'कोड नंबर लिखें', desc: 'प्रोडक्ट ID, रोल नंबर या कोड दर्ज करें।' },
-      { step: 2, title: 'फॉर्मेट चुनें', desc: 'CODE128, EAN-13 या CODE39 बारकोड चुनें।' },
-      { step: 3, title: 'बारकोड डाउनलोड', desc: 'लेबल व प्रिंटिंग के लिए इमेज डाउनलोड करें।' }
-    ]
-  },
-  calculators: {
-    stepsEn: [
-      { step: 1, title: 'Pick Calculator', desc: 'Select Age Cutoff, Bank EMI, GST (+/-), or % Marks.' },
-      { step: 2, title: 'Enter Details', desc: 'Input date of birth, cutoff date, or loan amounts.' },
-      { step: 3, title: 'Instant Calculation', desc: 'View exact breakdown (years/months/days, EMI, tax).' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'कैलकुलेटर चुनें', desc: 'सरकारी उम्र कट-ऑफ, बैंक EMI, GST या प्रतिशत चुनें।' },
-      { step: 2, title: 'विवरण दर्ज करें', desc: 'जन्म तिथि, कट-ऑफ तिथि या लोन राशि भरें।' },
-      { step: 3, title: 'सटीक परिणाम पाएं', desc: 'सटीक उम्र, मासिक किस्त या टैक्स का हिसाब तुरंत देखें।' }
-    ]
-  },
-  'whatsapp-print': {
-    stepsEn: [
-      { step: 1, title: 'Configure Print', desc: 'Select Color/B&W, copies, double-sided, lamination.' },
-      { step: 2, title: 'Review Summary', desc: 'Check total impressions and specifications.' },
-      { step: 3, title: 'Dispatch WhatsApp', desc: 'Direct chat opens with shop; attach file for zero-wait printing.' }
-    ],
-    stepsHi: [
-      { step: 1, title: 'प्रिंटिंग विवरण चुनें', desc: 'रंगीन/ब्लैक-व्हाइट, प्रतियों की संख्या, लेमिनेशन चुनें।' },
-      { step: 2, title: 'ऑर्डर चेक करें', desc: 'कुल पेज और निर्देशों की समीक्षा करें।' },
-      { step: 3, title: 'व्हाट्सएप पर भेजें', desc: 'मेराज कैफे पॉइंट के नंबर पर फाइल भेजकर जीरो-वेट प्रिंट लें।' }
-    ]
-  }
-};
-
 export const AllTools: React.FC = () => {
-  const { language, selectedToolId, setSelectedToolId } = useApp();
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
-  const [quickGuideModalTool, setQuickGuideModalTool] = useState<ToolItem | null>(null);
+  const { 
+    language, 
+    selectedToolId, 
+    setSelectedToolId,
+    setActiveTab 
+  } = useApp();
 
-  const filteredTools = TOOLS_LIST.filter((tool) => {
-    const matchesCat = filterCategory === 'all' || tool.category === filterCategory;
-    const q = search.toLowerCase().trim();
-    const matchesQuery =
-      !q ||
-      tool.name.toLowerCase().includes(q) ||
-      tool.nameHi.toLowerCase().includes(q) ||
-      tool.description.toLowerCase().includes(q) ||
-      tool.descriptionHi.toLowerCase().includes(q);
-    return matchesCat && matchesQuery;
-  });
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const activeTool = TOOLS_LIST.find((t) => t.id === selectedToolId);
+  // Filter tools in real-time based on search input and category
+  const filteredTools = useMemo(() => {
+    return TOOL_REGISTRY.filter((tool) => {
+      const matchesCategory = 
+        selectedCategory === 'all' || 
+        tool.category === selectedCategory;
 
-  const getToolIcon = (id: string) => {
-    switch (id) {
-      case 'compressor':
-      case 'resizer':
-        return <Camera className="w-5 h-5 text-orange-500" />;
-      case 'passport':
-        return <Camera className="w-5 h-5 text-orange-500" />;
-      case 'signature':
-        return <PenTool className="w-5 h-5 text-orange-500" />;
-      case 'pdf-merge':
-      case 'pdf-split':
-      case 'img-to-pdf':
-        return <Layers className="w-5 h-5 text-orange-500" />;
-      case 'ocr':
-        return <FileText className="w-5 h-5 text-orange-500" />;
-      case 'qr-generator':
-      case 'barcode-generator':
-        return <QrCode className="w-5 h-5 text-orange-500" />;
-      case 'calculators':
-        return <Calculator className="w-5 h-5 text-orange-500" />;
-      case 'whatsapp-print':
-        return <Printer className="w-5 h-5 text-orange-500" />;
-      default:
-        return <Sparkles className="w-5 h-5 text-orange-500" />;
+      const q = search.trim().toLowerCase();
+      const matchesSearch = 
+        !q ||
+        tool.name.toLowerCase().includes(q) ||
+        tool.nameHi.toLowerCase().includes(q) ||
+        tool.description.toLowerCase().includes(q) ||
+        (tool.descriptionHi ? tool.descriptionHi.toLowerCase().includes(q) : false) ||
+        tool.tags.some((tag) => tag.toLowerCase().includes(q));
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [search, selectedCategory]);
+
+  // Find active tool from registry or fallback
+  const activeTool = useMemo(() => {
+    if (!selectedToolId) return null;
+    return TOOL_REGISTRY.find((t) => t.id === selectedToolId) || {
+      id: selectedToolId,
+      name: selectedToolId,
+      nameHi: selectedToolId,
+      category: 'image',
+      description: 'Online tool',
+      descriptionHi: 'ऑनलाइन टूल',
+      tags: [],
+      engine: 'suite',
+      status: 'working'
+    };
+  }, [selectedToolId]);
+
+  // Route tool ID to the active working engine component
+  const renderActiveToolComponent = () => {
+    if (!selectedToolId) return null;
+
+    // Passport photo & background tools
+    if (
+      selectedToolId === 'passport-photo-maker' ||
+      selectedToolId === 'passport' ||
+      selectedToolId === 'background-remove' ||
+      selectedToolId === 'ssc-photo-resize' ||
+      selectedToolId === 'upsc-photo-resize' ||
+      selectedToolId === 'pan-card-photo-signature'
+    ) {
+      return <PassportPhotoTool />;
     }
+
+    // Compression tools (exact KB limits)
+    if (
+      selectedToolId === 'compress-to-50kb' ||
+      selectedToolId === 'compress-to-20kb' ||
+      selectedToolId === 'compress-to-100kb' ||
+      selectedToolId === 'compress-to-200kb' ||
+      selectedToolId === 'compress-to-custom-kb' ||
+      selectedToolId === 'compressor'
+    ) {
+      return <ImageCompressorTool />;
+    }
+
+    // Signature tools
+    if (
+      selectedToolId === 'resize-signature' ||
+      selectedToolId === 'signature-cm-dpi' ||
+      selectedToolId === 'signature'
+    ) {
+      return <SignatureTool />;
+    }
+
+    // Resizer tools (pixel / cm / mm / inch / DPI)
+    if (
+      selectedToolId === 'resize-image' ||
+      selectedToolId === 'resizer'
+    ) {
+      return <ImageResizeConvertTool />;
+    }
+
+    // PDF Merge & Split
+    if (selectedToolId === 'pdf-merge') {
+      return <PdfMergeTool />;
+    }
+    if (selectedToolId === 'pdf-split') {
+      return <PdfSplitterTool />;
+    }
+    if (selectedToolId === 'image-to-pdf' || selectedToolId === 'img-to-pdf') {
+      return <PdfTools />;
+    }
+
+    // OCR Tool (Hindi + English)
+    if (selectedToolId === 'image-to-text-ocr' || selectedToolId === 'ocr') {
+      return <OcrTool />;
+    }
+
+    // QR & Barcode
+    if (selectedToolId === 'qr-code-generator' || selectedToolId === 'qr-generator') {
+      return <QrCodeGeneratorTool />;
+    }
+    if (selectedToolId === 'barcode-generator') {
+      return <QrBarcodeTool />;
+    }
+
+    // Calculators
+    if (
+      selectedToolId === 'age-calculator' ||
+      selectedToolId === 'gst-calculator' ||
+      selectedToolId === 'emi-calculator' ||
+      selectedToolId === 'calculators'
+    ) {
+      return <CalculatorsTool />;
+    }
+
+    // WhatsApp Print
+    if (selectedToolId === 'whatsapp-print-order' || selectedToolId === 'whatsapp-print') {
+      return <WhatsAppPrintTool />;
+    }
+
+    // Default Suite for conversions, filters, watermarks, flip/rotate
+    return <ImageToolsSuite />;
   };
 
-  const renderActiveToolComponent = () => {
-    switch (selectedToolId) {
-      case 'compressor':
-      case 'resizer':
-      case 'image-suite':
-        return <ImageToolsSuite />;
+  const getToolIcon = (tool: RegistryTool) => {
+    switch (tool.category) {
       case 'passport':
-        return <PassportPhotoTool />;
-      case 'signature':
-        return <SignatureTool />;
-      case 'pdf-merge':
-        return <PdfMergeTool />;
-      case 'pdf-split':
-        return <PdfSplitterTool />;
-      case 'img-to-pdf':
-        return <PdfTools />;
-      case 'ocr':
-        return <OcrTool />;
-      case 'qr-generator':
-        return <QrCodeGeneratorTool />;
-      case 'barcode-generator':
-        return <QrBarcodeTool />;
-      case 'calculators':
-        return <CalculatorsTool />;
-      case 'whatsapp-print':
-        return <WhatsAppPrintTool />;
+        return <Camera className="w-5 h-5 text-blue-500" />;
+      case 'compression':
+        return <Layers className="w-5 h-5 text-emerald-500" />;
+      case 'pdf':
+        return <FileText className="w-5 h-5 text-red-500" />;
+      case 'resize':
+        return <Maximize2 className="w-5 h-5 text-purple-500" />;
+      case 'convert':
+        return <RefreshCw className="w-5 h-5 text-amber-500" />;
+      case 'editing':
+        return <Sparkles className="w-5 h-5 text-pink-500" />;
+      case 'document':
+        return <FileText className="w-5 h-5 text-cyan-500" />;
+      case 'qr_barcode':
+        return <QrCode className="w-5 h-5 text-orange-500" />;
+      case 'calculator':
+        return <Calculator className="w-5 h-5 text-blue-500" />;
+      case 'printing':
+        return <Printer className="w-5 h-5 text-teal-500" />;
       default:
-        return null;
+        return <Zap className="w-5 h-5 text-orange-500" />;
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
       
-      {/* If a tool is selected, render the workbench with a back button */}
-      {selectedToolId && activeTool ? (
+      {/* If a tool is active, render workbench with back navigation */}
+      {selectedToolId ? (
         <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setSelectedToolId(null)}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl neu-btn text-slate-700 dark:text-slate-200 transition-all"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-orange-500" />
-              <span>{language === 'hi' ? 'सभी टूल्स पर वापस' : 'Back to All Tools'}</span>
-            </button>
-            <span className="text-xs text-slate-400">/</span>
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-              {language === 'hi' ? activeTool.nameHi : activeTool.name}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#151D2E] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedToolId(null)}
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4 text-orange-500" />
+                <span>{language === 'hi' ? 'सभी टूल्स पर वापस' : 'Back to Tools Directory'}</span>
+              </button>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <span className="text-sm font-black text-slate-900 dark:text-white">
+                {language === 'hi' ? activeTool?.nameHi : activeTool?.name}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 text-xs font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>{language === 'hi' ? '100% एक्टिव व सुरक्षित' : 'Active & In-Browser'}</span>
+              </span>
+            </div>
           </div>
 
+          {/* Active Tool Workbench */}
           {renderActiveToolComponent()}
         </div>
       ) : (
-        /* Tools Catalog View */
-        <div className="space-y-8">
+        /* Real-Time Searchable Tool Registry View */
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
           
-          {/* Header */}
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              {language === 'hi' ? 'ऑनलाइन टूल्स डायरेक्टरी' : 'All Online Tools'}
-            </h1>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
-              {language === 'hi'
-                ? 'सरकारी फॉर्म, फोटो, सिग्नेचर, PDF और प्रिंटिंग के लिए 100% मुफ्त एवं प्राइवेट इन-ब्राउज़र टूल्स।'
-                : '100% free, private in-browser digital tools for government jobs, exams, PDFs, and photo formatting.'}
-            </p>
-          </div>
-
-          {/* Search & Filter Tabs */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Left Category Sidebar (matching reference style) */}
+          <aside className="hidden lg:flex flex-col w-64 shrink-0 space-y-6 sticky top-24">
             
-            {/* Search Input with Neumorphic Inset */}
-            <div className="relative w-full sm:w-80 neu-inset">
-              <Search className="w-4 h-4 text-orange-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={language === 'hi' ? 'टूल्स खोजें (जैसे: फोटो, PDF, उम्र)...' : 'Search tools (e.g. photo, PDF, age)...'}
-                className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-transparent text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
-              />
-            </div>
-
-            {/* Category Filter Pills (Neumorphic Inset Track with Tactile Buttons) */}
-            <div className="flex items-center gap-1.5 p-1 rounded-2xl neu-inset-sm overflow-x-auto w-full sm:w-auto">
-              {[
-                { id: 'all', labelEn: 'All Tools', labelHi: 'सभी' },
-                { id: 'image', labelEn: 'Photos', labelHi: 'फोटो' },
-                { id: 'pdf', labelEn: 'PDFs', labelHi: 'PDF' },
-                { id: 'document', labelEn: 'OCR Scan', labelHi: 'स्कैनर' },
-                { id: 'qr_barcode', labelEn: 'QR & Barcode', labelHi: 'QR कोड' },
-                { id: 'calculator', labelEn: 'Calculators', labelHi: 'कैलकुलेटर' },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setFilterCategory(cat.id)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-all min-h-[36px] ${
-                    filterCategory === cat.id
-                      ? 'neu-tab-active bg-[#E8EDF5] dark:bg-[#1B1E27] text-orange-600 dark:text-orange-400'
-                      : 'neu-tab-idle'
-                  }`}
-                >
-                  {language === 'hi' ? cat.labelHi : cat.labelEn}
-                </button>
-              ))}
-            </div>
-
-          </div>
-
-          {/* Tools Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTools.map((tool) => (
-              <div
-                key={tool.id}
-                onClick={() => setSelectedToolId(tool.id)}
-                className="group p-5 rounded-2xl neu-card-hover cursor-pointer flex flex-col justify-between"
+            <div className="w-full bg-[#FFFFFF] dark:bg-[#151D2E] rounded-3xl p-3 shadow-md border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+              
+              <button
+                type="button"
+                onClick={() => setActiveTab('home')}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-semibold text-xs sm:text-sm transition-all text-left cursor-pointer"
               >
+                <span className="w-5 h-5 flex items-center justify-center">🏠</span>
+                <span>Home</span>
+              </button>
+
+              {CATEGORY_META.map((cat) => {
+                const isActive = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all text-left cursor-pointer ${
+                      isActive
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25'
+                        : 'text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span>{cat.labelEn}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                      {cat.count}
+                    </span>
+                  </button>
+                );
+              })}
+
+            </div>
+
+            {/* Premium Tools Widget */}
+            <div className="w-full rounded-3xl p-5 bg-gradient-to-b from-[#1E293B] to-[#0F172A] text-white shadow-xl border border-slate-700/60 space-y-3 relative overflow-hidden">
+              <div className="flex items-center gap-2">
+                <Crown className="w-4 h-4 text-amber-400" />
+                <h4 className="text-xs font-black tracking-wide text-amber-300">
+                  Client-Side Engine
+                </h4>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Zero uploads to cloud servers. All image compression, crop, and PDF generation occur safely inside your web browser.
+              </p>
+            </div>
+
+          </aside>
+
+          {/* Main Content Area */}
+          <main className="flex-1 min-w-0 space-y-8">
+            
+            {/* Header with Search and Stats */}
+            <div className="bg-[#FFFFFF] dark:bg-[#151D2E] rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
+              
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="w-10 h-10 rounded-xl neu-icon group-hover:scale-105 transition-transform">
-                      {getToolIcon(tool.id)}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {/* Quick Guide Trigger Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setQuickGuideModalTool(tool);
-                        }}
-                        className="neu-btn flex items-center gap-1 text-[11px] font-semibold text-orange-600 dark:text-orange-400 px-2.5 py-1 rounded-lg transition-colors"
-                        title={language === 'hi' ? '3-स्टेप त्वरित गाइड' : '3-Step Quick Guide'}
-                      >
-                        <HelpCircle className="w-3 h-3 text-orange-500" />
-                        <span>{language === 'hi' ? 'गाइड' : 'Guide'}</span>
-                      </button>
-
-                      {/* Status Badge */}
-                      <div className="flex items-center gap-1 text-xs text-slate-500 pl-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400 text-[11px]">
-                          {tool.status === 'working' ? 'Ready' : 'Draft'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                    {language === 'hi' ? tool.nameHi : tool.name}
-                  </h3>
-
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1.5 line-clamp-3 leading-relaxed">
-                    {language === 'hi' ? tool.descriptionHi : tool.description}
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                    {language === 'hi' ? 'सभी ऑनलाइन डिजिटल टूल्स' : 'All Online Digital Tools'}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    {language === 'hi'
+                      ? 'फोटो, सिग्नेचर, PDF, OCR और कैलकुलेटर के 100% मुफ्त और प्राइवेट टूल्स।'
+                      : 'Search, filter, and launch complete client-side image, PDF, and cyber tools.'}
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-between text-xs">
-                  <span className="font-semibold text-orange-600 dark:text-orange-400 group-hover:underline">
-                    {language === 'hi' ? 'टूल खोलें →' : 'Launch Tool →'}
-                  </span>
-                  <span className="text-[11px] text-slate-400 uppercase tracking-wider font-mono">
-                    100% In-Browser
+                {/* Counter Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-800/80 text-orange-700 dark:text-orange-300 text-xs font-bold self-start md:self-auto">
+                  <Sparkles className="w-4 h-4" />
+                  <span>
+                    {filteredTools.length} {language === 'hi' ? 'टूल्स उपलब्ध' : 'Tools Available'}
                   </span>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {filteredTools.length === 0 && (
-            <div className="p-12 text-center text-slate-500 dark:text-slate-400 neu-card">
-              No matching tools found for "{search}". Try searching for photo, pdf, or age.
-            </div>
-          )}
-
-          {/* Quick Guide Modal with Neumorphic Card Styling */}
-          {quickGuideModalTool && (
-            <div
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
-              onClick={() => setQuickGuideModalTool(null)}
-            >
-              <div
-                className="neu-card max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-150"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-200/60 dark:border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl neu-icon shrink-0">
-                      {getToolIcon(quickGuideModalTool.id)}
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
-                        {language === 'hi' ? quickGuideModalTool.nameHi : quickGuideModalTool.name}
-                      </h3>
-                      <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1 mt-0.5">
-                        <BookOpen className="w-3 h-3" />
-                        <span>{language === 'hi' ? 'त्वरित 3-स्टेप गाइड' : 'Quick 3-Step Guide'}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setQuickGuideModalTool(null)}
-                    className="neu-btn p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                    aria-label="Close Guide"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* 3 Step Stack */}
-                <div className="space-y-3">
-                  {(
-                    (TOOL_GUIDES_DATA[quickGuideModalTool.id] || TOOL_GUIDES_DATA['compressor'])[
-                      language === 'hi' ? 'stepsHi' : 'stepsEn'
-                    ]
-                  ).map((st) => (
-                    <div
-                      key={st.step}
-                      className="p-3.5 rounded-xl neu-inset-sm flex items-start gap-3"
+              {/* Real-Time Live Search Input Bar */}
+              <div className="relative">
+                <div className="flex items-center rounded-2xl bg-slate-100/90 dark:bg-[#101726] border border-slate-300/80 dark:border-slate-700/80 shadow-inner px-4 py-3 focus-within:ring-2 focus-within:ring-orange-500 transition-all">
+                  <Search className="w-5 h-5 text-orange-500 shrink-0 mr-3" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={
+                      language === 'hi'
+                        ? 'टूल्स खोजें (जैसे: 50kb, passport, ssc, pdf, ocr, age, resize)...'
+                        : 'Search tools in real-time (e.g. 50kb, passport, ssc, pdf, ocr, age, resize)...'
+                    }
+                    className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
                     >
-                      <div className="w-6 h-6 rounded-full bg-orange-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                        {st.step}
-                      </div>
-                      <div className="space-y-0.5">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                          {st.title}
-                        </h4>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                          {st.desc}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setQuickGuideModalTool(null)}
-                    className="flex-1 py-2.5 neu-btn text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors min-h-[44px]"
-                  >
-                    {language === 'hi' ? 'बंद करें' : 'Close'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const id = quickGuideModalTool.id;
-                      setQuickGuideModalTool(null);
-                      setSelectedToolId(id);
-                    }}
-                    className="flex-1 py-2.5 neu-btn-orange text-xs font-bold transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
-                  >
-                    <span>{language === 'hi' ? 'टूल खोलें' : 'Open Tool'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* Horizontal Category Pill Tabs (Mobile + Desktop quick filters) */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                {CATEGORY_META.map((cat) => {
+                  const isActive = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {cat.labelEn}
+                    </button>
+                  );
+                })}
+              </div>
+
             </div>
-          )}
+
+            {/* Filtered Tools Grid */}
+            {filteredTools.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredTools.map((tool) => (
+                  <div
+                    key={tool.id}
+                    onClick={() => {
+                      setSelectedToolId(tool.id);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="bg-[#FFFFFF] dark:bg-[#151D2E] rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between group"
+                  >
+                    <div>
+                      {/* Top Header of Card */}
+                      <div className="flex items-center justify-between gap-3 mb-3.5">
+                        <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          {getToolIcon(tool)}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {tool.popular && (
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400">
+                              Popular
+                            </span>
+                          )}
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                            100% Free
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tool Title & Description */}
+                      <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-orange-500 transition-colors leading-snug">
+                        {language === 'hi' ? tool.nameHi : tool.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed line-clamp-2">
+                        {language === 'hi' ? tool.descriptionHi : tool.description}
+                      </p>
+                    </div>
+
+                    {/* Bottom CTA Row */}
+                    <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{tool.rating || '4.8'}</span>
+                      </div>
+                      
+                      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-500 group-hover:translate-x-1 transition-transform">
+                        <span>{language === 'hi' ? 'टूल खोलें' : 'Open Tool'}</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
+
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Empty Search State */
+              <div className="bg-[#FFFFFF] dark:bg-[#151D2E] rounded-3xl p-12 text-center border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center mx-auto text-2xl">
+                  🔍
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  {language === 'hi' ? 'कोई टूल नहीं मिला' : 'No tools found matching your search'}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+                  {language === 'hi'
+                    ? `"${search}" के लिए कोई टूल नहीं मिला। कृपया दूसरा शब्द खोजें या सभी टूल्स देखें।`
+                    : `We couldn't find any tool matching "${search}". Try searching for photo, pdf, or compress.`}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    setSelectedCategory('all');
+                  }}
+                  className="px-5 py-2.5 rounded-full bg-orange-500 text-white text-xs font-bold shadow-md cursor-pointer hover:bg-orange-600 transition-colors"
+                >
+                  {language === 'hi' ? 'सभी टूल्स देखें' : 'Reset Filters'}
+                </button>
+              </div>
+            )}
+
+          </main>
 
         </div>
       )}
